@@ -1,12 +1,66 @@
+server:
+  servlet:
+    context-path: /snail-wp
+spring:
+  datasource:
+    url: jdbc:mysql://10.66.160.153:3306/wish?characterEncoding=UTF-8&rewriteBatchedStatements=true&autoReconnect=true&autoReconnectForPools=true&createDatabaseIfNotExists=true&useSSL=false&serverTimezone=GMT%2B8
+    username: root
+    password: seblong@2017
+    type: com.zaxxer.hikari.HikariDataSource
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      connection-timeout: 10000
+      maximum-pool-size: 200
+      minimum-idle: 10
+      connection-init-sql: select 1
+      connection-test-query: select 1
+      data-source-properties:
+        prepStmtCacheSize: 256 #预编译缓存的条数限制
+        prepStmtCacheSqlLimit: 2048 #预编译sql语句的长度限制
+        cachePrepStmts: true  #缓存预编译的sql语句
+        useServerPreStmts: true  #预编译sql语句
+  data:
+    jpa:
+      repositories:
+        enabled: true
+  jpa:
+    database: mysql
+    database-platform: org.hibernate.dialect.MySQL5InnoDBDialect
+    generate-ddl: true
+    hibernate:
+      ddl-auto: update
+    open-in-view: true
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL5InnoDBDialect
+        show_sql: false
+        hbm2ddl:
+          auto: update
+        format_sql: true
+        use_jdbc_metadata_default: false #不直接使用jdbc，而是使用连接池
+        jdbc:
+          batch_size: 50 #批处理的条数
+          fetch_size: 50 #每次获取的条数
+          batch_versioned_data: true #允许对乐观锁数据执行批量操作
+        order_inserts: true #对插入进行排序
+        order_updates: true #对更新进行排序
+        generate_statistics: false
 snail:
   wp:
     redis:
-      host: 127.0.0.1
+      host: 10.66.181.87
       port: 6379
-      password: seblong
+      password: rpc@Redis
       maxTotal: 32
       maxIdle: 8
       testOnIdle: true
     mongodb:
       user:
-        url: mongodb://root:seblong2015@182.254.245.148:27017/seblong?authSource=admin&maxPoolSize=3000&waitQueueMultiple=500&waitQueueTimeoutMS=5000
+        url: mongodb://mongouser:seblong2017@10.66.230.36:27017/seblong?authSource=admin&maxPoolSize=3000&waitQueueMultiple=500&waitQueueTimeoutMS=5000
+sign:
+  key: 80C2CD8227CBBE096697A14A16783C99
+  check:
+    coerce: true
+swagger:
+  enabled: false

@@ -5,13 +5,10 @@ snail:
   wp:
     datacenterId: 0
     workerId: 1
-    mongodb:
-      user:
-        url: mongodb://mongouser:seblong2017@10.66.230.36:27017/seblong?authSource=admin&maxPoolSize=3000&waitQueueMultiple=500&waitQueueTimeoutMS=5000
 spring:
   profiles:
     active:
-      - dev
+      - prod
   application:
     name: wish
   autoconfigure:
