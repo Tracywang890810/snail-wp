@@ -58,6 +58,11 @@ snail:
     mongodb:
       user:
         url: mongodb://root:seblong2015@182.254.245.148:27017/seblong?authSource=admin&maxPoolSize=3000&waitQueueMultiple=500&waitQueueTimeoutMS=5000
+    jpush:
+      ak: f5eba399005f4c8d95894eca
+      sk: 5f5ce90d7af0ef3d06b5265b
+    push:
+      url: http://api.snailsleep.net/snail/v1/snailmessage/send
 sign:
   key: 80C2CD8227CBBE096697A14A16783C99
   check:

@@ -48,29 +48,12 @@ public class SnailWish implements Serializable{
 	// 每天的结束时间
 	private String endTime;
 
-	@Column(name = "SUPRISEDURL", nullable = true, columnDefinition = "varchar(255)")
-	// 惊喜链接
-	private String suprisedUrl;
-
-	@Column(name = "POPUPURL", nullable = true, columnDefinition = "varchar(255)")
-	// 弹窗链接
-	private String popupUrl;
-
-	@Column(name = "POPUPSTART")
-	// 弹窗开始时间戳
-	private long popupStart;
-
-	@Column(name = "POPUPEND")
-	// 弹窗结束时间戳
-	private long popupEnd;
-
-	@Column(name = "BIGCOUPONURL", nullable = true, columnDefinition = "varchar(255)")
-	// 大额优惠券地址
-	private String bigCouponUrl;
-
-	@Column(name = "SMALLCOUPONURL", nullable = true, columnDefinition = "varchar(255)")
-	// 中额优惠卷地址
-	private String smallCouponUrl;
+	@Column(name = "COUPONURL", nullable = true, columnDefinition = "varchar(255)")
+	// 优惠券地址
+	private String couponUrl;
+	
+	@Column(name = "H5URL", nullable = false, columnDefinition = "varchar(255)")
+	private String h5Url;
 
 	@Column(name = "START")
 	private long start;
@@ -93,6 +76,9 @@ public class SnailWish implements Serializable{
 
 	@Transient
 	private boolean joined;
+	
+	@Transient
+	private boolean yesterdayJoined;
 
 	@Transient
 	private boolean popup;
@@ -103,18 +89,13 @@ public class SnailWish implements Serializable{
 	public SnailWish() {
 	}
 
-	public SnailWish(String startDate, String endDate, String startTime, String endTime, String suprisedUrl,
-			String popupUrl, long popupStart, long popupEnd, String bigCouponUrl, String smallCouponUrl) {
+	public SnailWish(String startDate, String endDate, String startTime, String endTime, String couponUrl, String h5Url) {
 		this.startDate = startDate;
 		this.endDate = endDate;
 		this.startTime = startTime;
 		this.endTime = endTime;
-		this.suprisedUrl = suprisedUrl;
-		this.popupUrl = popupUrl;
-		this.popupStart = popupStart;
-		this.popupEnd = popupEnd;
-		this.bigCouponUrl = bigCouponUrl;
-		this.smallCouponUrl = smallCouponUrl;
+		this.couponUrl = couponUrl;
+		this.h5Url = h5Url;
 	}
 	
 	public void calculateStart() {
@@ -132,7 +113,7 @@ public class SnailWish implements Serializable{
 	}
 	
 	public static enum AwardType {
-		GOODS, COUPON_BIG, COUPON_SMALL
+		GOODS, COUPON
 	}
 
 	public static enum WishStatus {
@@ -190,9 +171,6 @@ public class SnailWish implements Serializable{
 
 	public void calculate() {
 		this.current = System.currentTimeMillis();
-		if (this.current >= this.getPopupStart() && this.current <= this.getPopupEnd()) {
-			this.popup = true;
-		}
 		String lotteryTimeStr = "120000";
 		if (this.current < this.getStart()) {
 			// 还未到第一次许愿时间

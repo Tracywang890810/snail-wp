@@ -1,15 +1,24 @@
 package com.seblong.wp.services.impl;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import lombok.extern.log4j.Log4j2;
 
+import org.quartz.JobBuilder;
+import org.quartz.JobKey;
+import org.quartz.Scheduler;
+import org.quartz.SchedulerException;
+import org.quartz.Trigger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -18,6 +27,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+import org.springframework.web.client.RestTemplate;
 
 import com.seblong.wp.entities.SnailWish;
 import com.seblong.wp.entities.SnailWish.AwardType;
@@ -25,11 +35,15 @@ import com.seblong.wp.entities.SnailWish.WishStatus;
 import com.seblong.wp.entities.WishRecord;
 import com.seblong.wp.enums.EntityStatus;
 import com.seblong.wp.exceptions.ValidationException;
+import com.seblong.wp.jobs.PushJob;
+import com.seblong.wp.jobs.PushTagJob;
 import com.seblong.wp.repositories.SnailWishRepository;
 import com.seblong.wp.repositories.WishRecordRepository;
+import com.seblong.wp.services.PushService;
 import com.seblong.wp.services.SnailWishLotteryRecordService;
 import com.seblong.wp.services.SnailWishService;
 import com.seblong.wp.utils.RedisLock;
+import com.seblong.wp.utils.SnailTriggerUtils;
 
 @Log4j2
 @Service
@@ -45,43 +59,46 @@ public class SnailWishServiceImpl implements SnailWishService {
 	private SnailWishLotteryRecordService snailWishLotteryRecordService;
 
 	@Autowired
+	private Scheduler scheduler;
+
+	@Autowired
 	private RedisTemplate<String, Object> redisTemplate;
 
-	private final static String key = "SNAIL::WISH";
+	@Autowired
+	private PushService pushService;
+
+	@Autowired
+	private RestTemplate restTemplate;
+
+	private final static String key = "SNAIL::WISH::V2";
 
 	@Override
-	public SnailWish create(String startDate, String endDate, String startTime, String endTime, String suprisedUrl,
-			String popupUrl, long popupStart, long popupEnd, String bigCouponUrl, String smallCouponUrl)
-			throws ValidationException {
+	public SnailWish create(String startDate, String endDate, String startTime, String endTime, String couponUrl,
+			String h5Url) throws ValidationException {
 		if (get() != null) {
 			throw new ValidationException(1411, "snailwish-exist");
 		}
-
-		SnailWish snailWish = new SnailWish(startDate, endDate, startTime, endTime, suprisedUrl, popupUrl, popupStart,
-				popupEnd, bigCouponUrl, smallCouponUrl);
+		SnailWish snailWish = new SnailWish(startDate, endDate, startTime, endTime, couponUrl, h5Url);
 		snailWish.calculateStart();
 		snailWish.calculateEnd();
 		LocalDate startLocalDate = LocalDate.parse(startDate, DateTimeFormatter.BASIC_ISO_DATE);
 		LocalDate lotteryDate = startLocalDate.plusDays(1);
 		snailWish.setNum(1);
 		snailWish.setLotteryDate(lotteryDate.format(DateTimeFormatter.BASIC_ISO_DATE));
+		// 创建推送标签任务
+		createPushTagJobAtDate(lotteryDate.format(DateTimeFormatter.BASIC_ISO_DATE));
 		return snailWishRepo.save(snailWish);
 	}
 
 	@Override
-	public SnailWish update(long id, String suprisedUrl, String popupUrl, long popupStart, long popupEnd,
-			String bigCouponUrl, String smallCouponUrl) throws ValidationException {
+	public SnailWish update(long id, String couponUrl, String h5Url) throws ValidationException {
 		Optional<SnailWish> optional = snailWishRepo.findById(id);
 		if (!optional.isPresent()) {
 			throw new ValidationException(1404, "snailwish-not-exist");
 		}
 		SnailWish snailWish = optional.get();
-		snailWish.setSuprisedUrl(suprisedUrl);
-		snailWish.setPopupUrl(popupUrl);
-		snailWish.setPopupStart(popupStart);
-		snailWish.setPopupEnd(popupEnd);
-		snailWish.setBigCouponUrl(bigCouponUrl);
-		snailWish.setSmallCouponUrl(smallCouponUrl);
+		snailWish.setCouponUrl(couponUrl);
+		snailWish.setH5Url(h5Url);
 		removeSnailWish();
 		return snailWishRepo.save(snailWish);
 	}
@@ -133,6 +150,11 @@ public class SnailWishServiceImpl implements SnailWishService {
 				// 若已经参加则调用snailWish.joined();
 				snailWish.joined();
 			}
+			LocalDate lotteryLocalDate = LocalDate.parse(snailWish.getLotteryDate(), DateTimeFormatter.BASIC_ISO_DATE);
+			String yesterdayLottery = lotteryLocalDate.minusDays(1).format(DateTimeFormatter.BASIC_ISO_DATE);
+			if (!yesterdayLottery.equals(snailWish.getStartDate())) {
+				snailWish.setYesterdayJoined(wishRecordRepo.countByUserAndLotteryDate(user, yesterdayLottery) > 0);
+			}
 		}
 		return snailWish;
 	}
@@ -165,8 +187,7 @@ public class SnailWishServiceImpl implements SnailWishService {
 	@Override
 	public void lottery() {
 		log.info("开始开奖方法。。。  ");
-		String lockKey = "WISH::LOTTERY:LOCK";
-
+		String lockKey = "WISH::LOTTERY:LOCK::V2";
 		RedisLock redisLock = new RedisLock(redisTemplate, lockKey);
 		if (redisLock.tryLock()) {
 			log.info("获取到锁，进入开奖逻辑。。。 ");
@@ -177,7 +198,7 @@ public class SnailWishServiceImpl implements SnailWishService {
 					LocalDate nowLocalDate = LocalDate.now();
 					String nowLocalDateStr = nowLocalDate.format(DateTimeFormatter.BASIC_ISO_DATE);
 					if (nowLocalDateStr.equals(snailWish.getLotteryDate())) {
-						// 80,200
+						// 70
 						// 取出不允许奖品的记录
 						int page = 0, size = 128;
 						Sort sort = Sort.by("id");
@@ -187,8 +208,8 @@ public class SnailWishServiceImpl implements SnailWishService {
 						long current = System.currentTimeMillis();
 						while (notAllowBigRecordPage != null && notAllowBigRecordPage.hasContent()) {
 							for (WishRecord wishRecord : notAllowBigRecordPage) {
-								log.info("Record:  " + wishRecord.getId() + " 获得中额优惠卷");
-								wishRecord.setAwardType(AwardType.COUPON_SMALL.toString());
+								log.info("Record:  " + wishRecord.getId() + " 获得优惠卷");
+								wishRecord.setAwardType(AwardType.COUPON.toString());
 								wishRecord.setUpdated(current);
 								wishRecord.setStatus(EntityStatus.DONE.toString());
 							}
@@ -203,8 +224,7 @@ public class SnailWishServiceImpl implements SnailWishService {
 							}
 						}
 						// 取出允许奖品的记录
-						int prize = 80, prizeRemain = 80;
-						int big = 200, bigRemain = 200;
+						int prize = 70, prizeRemain = 70;
 						long allowBigTotal = wishRecordRepo.countByLotteryDateAndAllowBig(nowLocalDateStr, true);
 						if (allowBigTotal > 0) {
 							double total = (double) allowBigTotal;
@@ -231,14 +251,6 @@ public class SnailWishServiceImpl implements SnailWishService {
 									count = 0;
 								}
 								log.info("countPrize1 : " + countPrize);
-								int countBig = new Double(Math.ceil(big * rate)).intValue();
-								if (count > countBig) {
-									count -= countBig;
-								} else {
-									countBig = count;
-									count = 0;
-								}
-								log.info("countBig1 : " + countBig);
 								if (prizeRemain > 0 && prizeRemain > countPrize) {
 									prizeRemain -= countPrize;
 								} else {
@@ -246,13 +258,6 @@ public class SnailWishServiceImpl implements SnailWishService {
 									prizeRemain = 0;
 								}
 								log.info("countPrize2 : " + countPrize);
-								if (bigRemain > 0 && bigRemain > countBig) {
-									bigRemain -= countBig;
-								} else {
-									countBig = bigRemain;
-									bigRemain = 0;
-								}
-								log.info("countBig2 : " + countBig);
 								List<WishRecord> wishRecords = new ArrayList<WishRecord>(allowBigRecordPage
 										.getContent().size());
 								wishRecords.addAll(allowBigRecordPage.getContent());
@@ -269,29 +274,17 @@ public class SnailWishServiceImpl implements SnailWishService {
 									prizeRecords.add(wishRecord);
 									bigUsers.add(wishRecord.getUser());
 								}
-								List<WishRecord> bigRecords = new ArrayList<WishRecord>();
-								for (int i = 0; i < countBig; i++) {
-									int index = random.nextInt(wishRecords.size());
-									WishRecord wishRecord = wishRecords.remove(index);
-									log.info("Record:  " + wishRecord.getId() + " 获得大额优惠卷");
-									wishRecord.setAwardType(AwardType.COUPON_BIG.toString());
-									wishRecord.setUpdated(current);
-									wishRecord.setStatus(EntityStatus.DONE.toString());
-									bigRecords.add(wishRecord);
-									bigUsers.add(wishRecord.getUser());
-								}
 								if (!CollectionUtils.isEmpty(bigUsers))
 									putBigUser(snailWish, bigUsers);
 
 								for (int i = 0; i < wishRecords.size(); i++) {
 									WishRecord wishRecord = wishRecords.get(i);
-									log.info("Record:  " + wishRecord.getId() + " 获得小额优惠卷");
-									wishRecord.setAwardType(AwardType.COUPON_SMALL.toString());
+									log.info("Record:  " + wishRecord.getId() + " 获得优惠卷");
+									wishRecord.setAwardType(AwardType.COUPON.toString());
 									wishRecord.setUpdated(current);
 									wishRecord.setStatus(EntityStatus.DONE.toString());
 								}
 								wishRecords.addAll(prizeRecords);
-								wishRecords.addAll(bigRecords);
 
 								snailWishLotteryRecordService.create(wishRecords);
 								wishRecordRepo.saveAll(wishRecords);
@@ -309,13 +302,13 @@ public class SnailWishServiceImpl implements SnailWishService {
 					log.info("结算逻辑结束");
 					LocalDate endLocalDate = LocalDate.parse(snailWish.getEndDate(), DateTimeFormatter.BASIC_ISO_DATE);
 					LocalDate endLotteryLocalDate = endLocalDate.plusDays(1);
-					if (endLotteryLocalDate.compareTo(nowLocalDate) <= 0) {
-						log.info("最后一天");
-					} else {
+					if (endLotteryLocalDate.compareTo(nowLocalDate) > 0) {
 						log.info("明天继续开奖");
 						nowLocalDate = nowLocalDate.plusDays(1);
 						snailWish.setLotteryDate(nowLocalDate.format(DateTimeFormatter.BASIC_ISO_DATE));
 						snailWish.setNum(snailWish.getNum() + 1);
+						log.info("开始创建推送标签任务 " + snailWish.getLotteryDate());
+						createPushTagJobAtDate(snailWish.getLotteryDate());
 					}
 					removeSnailWish();
 					putSnailWish(snailWish);
@@ -329,7 +322,48 @@ public class SnailWishServiceImpl implements SnailWishService {
 				redisLock.unlock();
 			}
 		}
+	}
 
+	@Override
+	public void push() {
+		SnailWish snailWish = get();
+		String nowDate = LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE);
+		if (snailWish != null && nowDate.equals(snailWish.getLotteryDate())
+				&& wishRecordRepo.countByLotteryDate(nowDate) > 0) {
+			String tag = "WISH_USERS_" + nowDate;
+			log.info("开始发送开奖推送: " + nowDate);
+			pushService.send("今日许愿池已开奖！快来看看你的获奖信息吧～", snailWish.getH5Url(), "", 0, tag, "WISHING");
+		}
+	}
+
+	@Override
+	public void pushTag() {
+		SnailWish snailWish = get();
+		String nowDate = LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE);
+		if (snailWish != null && nowDate.equals(snailWish.getLotteryDate())) {
+			String tag = "WISH_USERS_" + nowDate;
+			int page = 0, size = 128;
+			Sort sort = Sort.by("id");
+			Pageable pageable = PageRequest.of(page, size, sort);
+			Page<WishRecord> wishPage = wishRecordRepo.findByLotteryDate(nowDate, pageable);
+			boolean push = false;
+			while (wishPage != null && wishPage.hasContent()) {
+				Set<String> userIds = wishPage.stream().map(WishRecord::getUser).collect(Collectors.toSet());
+				pushService.addToTag(tag, userIds);
+				if (!push)
+					push = true;
+				if (wishPage.hasNext()) {
+					pageable = PageRequest.of(++page, size, sort);
+					wishPage = wishRecordRepo.findByLotteryDate(nowDate, pageable);
+				} else {
+					break;
+				}
+			}
+			if (push) {
+				log.info("开始创建推送任务：" + nowDate);
+				createPushJobAtDate(nowDate);
+			}
+		}
 	}
 
 	private void putSnailWish(SnailWish snailWish) {
@@ -350,18 +384,57 @@ public class SnailWishServiceImpl implements SnailWishService {
 
 	private void putBigUser(SnailWish snailWish, List<String> users) {
 		if (!CollectionUtils.isEmpty(users)) {
-			String key = "SNAIL::WISH::BIG::" + snailWish.getId();
+			String key = "SNAIL::WISH::BIG::V2::" + snailWish.getId();
 			redisTemplate.boundSetOps(key).add(users.toArray());
 		}
 	}
 
 	private boolean isBigUser(SnailWish snailWish, String user) {
-		String key = "SNAIL::WISH::BIG::" + snailWish.getId();
+		String key = "SNAIL::WISH::BIG::V2::" + snailWish.getId();
 		return redisTemplate.boundSetOps(key).isMember(user);
 	}
 
 	private void clearBigUser(SnailWish snailWish) {
-		String key = "SNAIL::WISH::BIG::" + snailWish.getId();
+		String key = "SNAIL::WISH::BIG::V2::" + snailWish.getId();
 		redisTemplate.delete(key);
 	}
+
+	private void createPushJobAtDate(String date) {
+
+		LocalDate localDate = LocalDate.parse(date, DateTimeFormatter.BASIC_ISO_DATE);
+		LocalTime localTime = LocalTime.parse("120000", DateTimeFormatter.ofPattern("HHmmss"));
+		LocalDateTime localDateTime = LocalDateTime.of(localDate, localTime);
+		long timestamp = localDateTime.toEpochSecond(ZoneOffset.ofHours(8)) * 1000;
+		try {
+			JobKey jobKey = new JobKey(PushJob.JOB);
+			if (scheduler.checkExists(jobKey)) {
+				scheduler.deleteJob(jobKey);
+			}
+			Trigger trigger = SnailTriggerUtils.getTriggerAtDate(PushJob.TRIGGER, "", timestamp);
+			scheduler.scheduleJob(JobBuilder.newJob(PushJob.class).withIdentity(PushJob.JOB).build(), trigger);
+			log.info("创建推送任务成功: " + date + "120000");
+		} catch (SchedulerException e) {
+			e.printStackTrace();
+		}
+	}
+
+	private void createPushTagJobAtDate(String date) {
+
+		LocalDate localDate = LocalDate.parse(date, DateTimeFormatter.BASIC_ISO_DATE);
+		LocalTime localTime = LocalTime.parse("020000", DateTimeFormatter.ofPattern("HHmmss"));
+		LocalDateTime localDateTime = LocalDateTime.of(localDate, localTime);
+		long timestamp = localDateTime.toEpochSecond(ZoneOffset.ofHours(8)) * 1000;
+		try {
+			JobKey jobKey = new JobKey(PushTagJob.JOB);
+			if (scheduler.checkExists(jobKey)) {
+				scheduler.deleteJob(jobKey);
+			}
+			Trigger trigger = SnailTriggerUtils.getTriggerAtDate(PushTagJob.TRIGGER, "", timestamp);
+			scheduler.scheduleJob(JobBuilder.newJob(PushTagJob.class).withIdentity(PushTagJob.JOB).build(), trigger);
+			log.info("创建推送标签任务成功: " + date + "020000");
+		} catch (SchedulerException e) {
+			e.printStackTrace();
+		}
+	}
+
 }

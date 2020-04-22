@@ -13,13 +13,15 @@ public interface SnailWishService {
 
 	boolean isAllowBig(SnailWish snailWish, String user);
 
-	SnailWish create(String startDate, String endDate, String startTime, String endTime, String suprisedUrl,
-			String popupUrl, long popupStart, long popupEnd, String bigCouponUrl, String smallCouponUrl)
+	SnailWish create(String startDate, String endDate, String startTime, String endTime, String couponUrl, String h5Url)
 			throws ValidationException;
 
-	SnailWish update(long id, String suprisedUrl, String popupUrl, long popupStart, long popupEnd, String bigCouponUrl,
-			String smallCouponUrl) throws ValidationException;
+	SnailWish update(long id, String couponUrl, String h5Url) throws ValidationException;
 
 	void lottery();
+	
+	void push();
+	
+	void pushTag();
 
 }

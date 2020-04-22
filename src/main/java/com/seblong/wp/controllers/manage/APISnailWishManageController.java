@@ -58,21 +58,14 @@ public class APISnailWishManageController {
 			@ApiImplicitParam(name = "endDate", value = "结束日期", dataType = "String", paramType = "form", format = "yyyyMMdd", example = "20200324", required = true),
 			@ApiImplicitParam(name = "startTime", value = "许愿开始时间", dataType = "String", paramType = "form", format = "HHmmss", example = "210000", required = true),
 			@ApiImplicitParam(name = "endTime", value = "许愿结束时间,注意没有240000，若为晚上12点，设置为235959", dataType = "String", paramType = "form", format = "HHmmss", example = "235959", required = true),
-			@ApiImplicitParam(name = "suprisedUrl", value = "惊喜跳转url", dataType = "String", paramType = "form", required = false),
-			@ApiImplicitParam(name = "popupUrl", value = "弹窗跳转url", dataType = "String", paramType = "form", required = false),
-			@ApiImplicitParam(name = "popupStart", value = "弹窗开始毫秒级时间戳", dataType = "Long", paramType = "form", example = "1584806400000", required = true),
-			@ApiImplicitParam(name = "popupEnd", value = "弹窗开始毫秒级时间戳", dataType = "Long", paramType = "form", example = "1584979200000", required = true),
-			@ApiImplicitParam(name = "bigCouponUrl", value = "大额优惠卷地址", dataType = "String", paramType = "form", required = false),
-			@ApiImplicitParam(name = "smallCouponUrl", value = "中额优惠卷地址", dataType = "String", paramType = "form", required = false) })
+			@ApiImplicitParam(name = "couponUrl", value = "优惠卷地址", dataType = "String", paramType = "form", required = true),
+			@ApiImplicitParam(name = "h5Url", value = "h5客户端地址，推送要用到", dataType = "String", paramType = "form", required = true)})
 	@ApiResponses(value = { @ApiResponse(code = 1401, message = "invalid-startDate"),
 			@ApiResponse(code = 1402, message = "invalid-endDate"),
 			@ApiResponse(code = 1403, message = "invalid-startTime"),
 			@ApiResponse(code = 1405, message = "invalid-endTime"),
-			@ApiResponse(code = 1406, message = "invalid-popupEnd"),
-			@ApiResponse(code = 1407, message = "invalid-suprisedUrl"),
-			@ApiResponse(code = 1408, message = "invalid-popupUrl"),
-			@ApiResponse(code = 1409, message = "invalid-smallCouponUrl"),
-			@ApiResponse(code = 1410, message = "invalid-bigCouponUrl"),
+			@ApiResponse(code = 1409, message = "invalid-h5Url"),
+			@ApiResponse(code = 1410, message = "invalid-couponUrl"),
 			@ApiResponse(code = 1411, message = "snailwish-exist"), @ApiResponse(code = 200, message = "OK") })
 	@PostMapping(value = "/create")
 	public ResponseEntity<StandardEntityResource<SnailWishDomain>> create(
@@ -80,16 +73,10 @@ public class APISnailWishManageController {
 			@RequestParam(value = "endDate", required = true) String endDate,
 			@RequestParam(value = "startTime", required = true) String startTime,
 			@RequestParam(value = "endTime", required = true) String endTime,
-			@RequestParam(value = "suprisedUrl", required = false, defaultValue = "") String suprisedUrl,
-			@RequestParam(value = "popupUrl", required = false, defaultValue = "") String popupUrl,
-			@RequestParam(value = "popupStart", required = true) long popupStart,
-			@RequestParam(value = "popupEnd", required = true) long popupEnd,
-			@RequestParam(value = "bigCouponUrl", required = false, defaultValue = "") String bigCouponUrl,
-			@RequestParam(value = "smallCouponUrl", required = false, defaultValue = "") String smallCouponUrl) {
-		validate(startDate, endDate, startTime, endTime, suprisedUrl, popupUrl, popupStart, popupEnd, bigCouponUrl,
-				smallCouponUrl);
-		SnailWish snailWish = snailWishService.create(startDate, endDate, startTime, endTime, suprisedUrl, popupUrl,
-				popupStart, popupEnd, bigCouponUrl, smallCouponUrl);
+			@RequestParam(value = "couponUrl", required = true) String couponUrl,
+			@RequestParam(value = "h5Url", required = true) String h5Url) {
+		validate(startDate, endDate, startTime, endTime,couponUrl, h5Url);
+		SnailWish snailWish = snailWishService.create(startDate, endDate, startTime, endTime, couponUrl,h5Url);
 		return new ResponseEntity<StandardEntityResource<SnailWishDomain>>(
 				new StandardEntityResource<SnailWishDomain>(SnailWishDomain.fromEntity(snailWish)), HttpStatus.OK);
 	}
@@ -97,33 +84,19 @@ public class APISnailWishManageController {
 	@ApiOperation(value = "更新许愿池")
 	@ApiImplicitParams(value = {
 			@ApiImplicitParam(name = "unique", value = "许愿池id", dataType = "Long", paramType = "form", required = true, example = "0"),
-			@ApiImplicitParam(name = "suprisedUrl", value = "惊喜跳转url", dataType = "String", paramType = "form", required = false),
-			@ApiImplicitParam(name = "popupUrl", value = "弹窗跳转url", dataType = "String", paramType = "form", required = false),
-			@ApiImplicitParam(name = "popupStart", value = "弹窗开始毫秒级时间戳", dataType = "Long", paramType = "form", example = "1584806400000", required = true),
-			@ApiImplicitParam(name = "popupEnd", value = "弹窗开始毫秒级时间戳", dataType = "Long", paramType = "form", example = "1584979200000", required = true),
-			@ApiImplicitParam(name = "bigCouponUrl", value = "大额优惠卷地址", dataType = "String", paramType = "form", required = false),
-			@ApiImplicitParam(name = "smallCouponUrl", value = "中额优惠卷地址", dataType = "String", paramType = "form", required = false) })
+			@ApiImplicitParam(name = "couponUrl", value = "优惠卷地址", dataType = "String", paramType = "form", required = false),
+			@ApiImplicitParam(name = "h5Url", value = "h5客户端地址，推送要用到", dataType = "String", paramType = "form", required = true) })
 	@ApiResponses(value = {
 			@ApiResponse(code = 1404, message = "snailwish-not-exist"),
-			@ApiResponse(code = 1406, message = "invalid-popupEnd"),
-			@ApiResponse(code = 1407, message = "invalid-suprisedUrl"),
-			@ApiResponse(code = 1408, message = "invalid-popupUrl"),
-			@ApiResponse(code = 1409, message = "invalid-smallCouponUrl"),
-			@ApiResponse(code = 1410, message = "invalid-bigCouponUrl"),
-			@ApiResponse(code = 1411, message = "snailwish-exist"), @ApiResponse(code = 200, message = "OK") })
+			@ApiResponse(code = 1409, message = "invalid-h5Url"),
+			@ApiResponse(code = 1410, message = "invalid-couponUrl"), @ApiResponse(code = 200, message = "OK") })
 	@PostMapping(value = "/update")
 	public ResponseEntity<StandardEntityResource<SnailWishDomain>> update(
 			@RequestParam(value = "unique", required = true) long id,
-			@RequestParam(value = "suprisedUrl", required = false, defaultValue = "") String suprisedUrl,
-			@RequestParam(value = "popupUrl", required = false, defaultValue = "") String popupUrl,
-			@RequestParam(value = "popupStart", required = true) long popupStart,
-			@RequestParam(value = "popupEnd", required = true) long popupEnd,
-			@RequestParam(value = "bigCouponUrl", required = false, defaultValue = "") String bigCouponUrl,
-			@RequestParam(value = "smallCouponUrl", required = false, defaultValue = "") String smallCouponUrl) {
-		validate(suprisedUrl, popupUrl, popupStart, popupEnd, bigCouponUrl,
-				smallCouponUrl);
-		SnailWish snailWish = snailWishService.update(id, suprisedUrl, popupUrl, popupStart, popupEnd, bigCouponUrl,
-				smallCouponUrl);
+			@RequestParam(value = "couponUrl", required = true) String couponUrl,
+			@RequestParam(value = "h5Url", required = true) String h5Url) {
+		validate(couponUrl, h5Url);
+		SnailWish snailWish = snailWishService.update(id, couponUrl,h5Url);
 		return new ResponseEntity<StandardEntityResource<SnailWishDomain>>(
 				new StandardEntityResource<SnailWishDomain>(SnailWishDomain.fromEntity(snailWish)), HttpStatus.OK);
 	}
@@ -138,8 +111,7 @@ public class APISnailWishManageController {
 		return new ResponseEntity<StandardRestResource>(new StandardRestResource(200, "OK"), HttpStatus.OK);
 	}
 
-	private void validate(String startDate, String endDate, String startTime, String endTime, String suprisedUrl,
-			String popupUrl, long popupStart, long popupEnd, String bigCouponUrl, String smallCouponUrl) {
+	private void validate(String startDate, String endDate, String startTime, String endTime, String couponUrl, String h5Url) {
 
 		LocalDate startLocalDate = null;
 		try {
@@ -183,46 +155,24 @@ public class APISnailWishManageController {
 			throw new ValidationException(1405, "invalid-endTime");
 		}
 
-		if (popupEnd <= popupStart) {
-			throw new ValidationException(1406, "invalid-popupEnd");
+		if (!StringUtils.isEmpty(couponUrl) && !RegexUtils.checkURL(couponUrl)) {
+			throw new ValidationException(1410, "invalid-couponUrl");
 		}
-
-		if (!StringUtils.isEmpty(suprisedUrl) && !RegexUtils.checkURL(suprisedUrl)) {
-			throw new ValidationException(1407, "invalid-suprisedUrl");
+		
+		if (StringUtils.isEmpty(couponUrl) || !RegexUtils.checkURL(couponUrl)) {
+			throw new ValidationException(1409, "invalid-h5Url");
 		}
-
-		if (!StringUtils.isEmpty(popupUrl) && !RegexUtils.checkURL(popupUrl)) {
-			throw new ValidationException(1408, "invalid-popupUrl");
-		}
-
-		if (!StringUtils.isEmpty(smallCouponUrl) && !RegexUtils.checkURL(smallCouponUrl)) {
-			throw new ValidationException(1409, "invalid-smallCouponUrl");
-		}
-
-		if (!StringUtils.isEmpty(bigCouponUrl) && !RegexUtils.checkURL(bigCouponUrl)) {
-			throw new ValidationException(1410, "invalid-bigCouponUrl");
-		}
+		
+		
 	}
 	
-	private void validate(String suprisedUrl,String popupUrl, long popupStart, long popupEnd, String bigCouponUrl, String smallCouponUrl) {
-		if (popupEnd <= popupStart) {
-			throw new ValidationException(1406, "invalid-popupEnd");
+	private void validate(String couponUrl, String h5Url) {
+		if (!StringUtils.isEmpty(couponUrl) && !RegexUtils.checkURL(couponUrl)) {
+			throw new ValidationException(1410, "invalid-couponUrl");
 		}
-
-		if (!StringUtils.isEmpty(suprisedUrl) && !RegexUtils.checkURL(suprisedUrl)) {
-			throw new ValidationException(1407, "invalid-suprisedUrl");
-		}
-
-		if (!StringUtils.isEmpty(popupUrl) && !RegexUtils.checkURL(popupUrl)) {
-			throw new ValidationException(1408, "invalid-popupUrl");
-		}
-
-		if (!StringUtils.isEmpty(smallCouponUrl) && !RegexUtils.checkURL(smallCouponUrl)) {
-			throw new ValidationException(1409, "invalid-smallCouponUrl");
-		}
-
-		if (!StringUtils.isEmpty(bigCouponUrl) && !RegexUtils.checkURL(bigCouponUrl)) {
-			throw new ValidationException(1410, "invalid-bigCouponUrl");
+		
+		if (StringUtils.isEmpty(couponUrl) || !RegexUtils.checkURL(couponUrl)) {
+			throw new ValidationException(1409, "invalid-h5Url");
 		}
 	}
 

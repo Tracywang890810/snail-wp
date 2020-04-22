@@ -37,29 +37,9 @@ public class SnailWishDomain implements Serializable{
 	// 每天的结束时间
 	private String endTime;
 
-	@ApiModelProperty(value = "惊喜跳转url", name = "suprisedUrl", dataType = "String", allowEmptyValue = true)
-	// 惊喜链接
-	private String suprisedUrl;
-
-	@ApiModelProperty(value = "弹窗跳转url", name = "popupUrl", dataType = "String", allowEmptyValue = true)
-	// 弹窗链接
-	private String popupUrl;
-
-	@ApiModelProperty(value = "弹窗的开始毫秒时间戳", name = "popupStart", dataType = "Long")
-	// 弹窗开始时间戳
-	private long popupStart;
-
-	@ApiModelProperty(value = "弹窗的结束毫秒时间戳", name = "popupEnd", dataType = "Long")
-	// 弹窗结束时间戳
-	private long popupEnd;
-
-	@ApiModelProperty(value = "大额优惠券url", name = "bigCouponUrl", dataType = "String", allowEmptyValue = true)
-	// 大额优惠券地址
-	private String bigCouponUrl;
-
-	@ApiModelProperty(value = "中额优惠卷url", name = "smallCouponUrl", dataType = "String", allowEmptyValue = true)
+	@ApiModelProperty(value = "优惠卷url", name = "couponUrl", dataType = "String", allowEmptyValue = true)
 	// 中额优惠卷地址
-	private String smallCouponUrl;
+	private String couponUrl;
 
 	
 	private SnailWishDomain () {
@@ -72,12 +52,7 @@ public class SnailWishDomain implements Serializable{
 		domain.endDate = snailWish.getEndDate();
 		domain.startTime = snailWish.getStartTime();
 		domain.endTime = snailWish.getEndTime();
-		domain.suprisedUrl = snailWish.getSuprisedUrl();
-		domain.popupUrl = snailWish.getPopupUrl();
-		domain.popupStart = snailWish.getPopupStart();
-		domain.popupEnd = snailWish.getPopupEnd();
-		domain.bigCouponUrl = snailWish.getBigCouponUrl();
-		domain.smallCouponUrl = snailWish.getSmallCouponUrl();
+		domain.couponUrl = snailWish.getCouponUrl();
 		return domain;
 	}
 	
