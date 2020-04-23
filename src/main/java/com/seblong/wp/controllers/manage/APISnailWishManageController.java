@@ -31,7 +31,7 @@ import com.seblong.wp.resource.StandardRestResource;
 import com.seblong.wp.services.SnailWishService;
 import com.seblong.wp.utils.RegexUtils;
 
-@Api("许愿池的管理后台接口")
+@Api(tags = "许愿池的管理后台接口")
 @Controller
 @RequestMapping(value = "/manage/wish", produces = MediaType.APPLICATION_JSON_VALUE)
 public class APISnailWishManageController {
@@ -104,6 +104,7 @@ public class APISnailWishManageController {
 	@ApiOperation(value = "删除许愿池")
 	@ApiImplicitParam(name = "unique", value = "许愿池id", dataType = "Long", paramType = "form", example = "0", required = true)
 	@ApiResponses(value = { @ApiResponse(code = 1404, message = "snailwish-not-exist"),
+			@ApiResponse(code = 1404, message = "snailwish-has-started"),
 			@ApiResponse(code = 200, message = "OK") })
 	@PostMapping(value = "/delete")
 	public ResponseEntity<StandardRestResource> delete(@RequestParam(value = "unique", required = true) long id) {

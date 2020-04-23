@@ -48,7 +48,7 @@ public class WishRecord {
     /**
      * 设备id
      */
-    @Column(name = "DEVICEID", columnDefinition = "varchar(255)")
+    @Column(name = "DEVICEID", columnDefinition = "varchar(80)")
     private String deviceId;
 
     /**

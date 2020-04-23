@@ -8,7 +8,7 @@ snail:
 spring:
   profiles:
     active:
-      - dev
+      - test
   application:
     name: wish
   autoconfigure:

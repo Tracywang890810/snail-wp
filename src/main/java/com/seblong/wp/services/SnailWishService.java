@@ -23,5 +23,7 @@ public interface SnailWishService {
 	void push();
 	
 	void pushTag();
+	
+	void pushClearTag();
 
 }

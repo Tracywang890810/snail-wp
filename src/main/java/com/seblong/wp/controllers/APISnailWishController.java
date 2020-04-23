@@ -22,7 +22,7 @@ import com.seblong.wp.exceptions.ValidationException;
 import com.seblong.wp.resource.StandardEntityResource;
 import com.seblong.wp.services.SnailWishService;
 
-@Api("许愿池的前端接口")
+@Api(tags = "许愿池的前端接口")
 @Controller
 @RequestMapping(value = "/wish", produces = MediaType.APPLICATION_JSON_VALUE)
 public class APISnailWishController {

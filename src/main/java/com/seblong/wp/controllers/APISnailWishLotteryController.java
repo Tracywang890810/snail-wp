@@ -28,7 +28,7 @@ import com.seblong.wp.resource.StandardEntitiesResource;
 import com.seblong.wp.resource.StandardEntityResource;
 import com.seblong.wp.services.SnailWishLotteryRecordService;
 
-@Api("获奖记录接口")
+@Api(tags = "获奖记录接口")
 @Controller
 @RequestMapping(value = "/wish/lottery", produces = MediaType.APPLICATION_JSON_VALUE)
 public class APISnailWishLotteryController {

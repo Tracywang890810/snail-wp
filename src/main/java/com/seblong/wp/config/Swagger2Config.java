@@ -54,7 +54,7 @@ public class Swagger2Config {
 		// 设置文档标题(API名称)
 				.title("许愿池项目接口文档")
 				// 文档描述
-				.description("项目地址：https://api.snailsleep.net/snail-wp")
+				.description("项目地址：https://api.snailsleep.net/snail-wp-v2")
 				// 服务条款URL
 				.termsOfServiceUrl("http://127.0.0.1:8080/")
 				// 版本号
