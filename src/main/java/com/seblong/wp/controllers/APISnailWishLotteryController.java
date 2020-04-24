@@ -60,7 +60,7 @@ public class APISnailWishLotteryController {
 	@ApiOperation(value = "分页获取某个日期的获奖记录")
     @ApiImplicitParams(
             value = {
-            		@ApiImplicitParam(name = "type", value = "获奖类型", dataType = "String", paramType = "query", allowableValues = "GOODS, COUPON_BIG, COUPON_SMALL", required = true),
+            		@ApiImplicitParam(name = "type", value = "获奖类型", dataType = "String", paramType = "query", allowableValues = "GOODS, COUPON", required = true),
             		@ApiImplicitParam(name = "date", value = "日期", dataType = "String", paramType = "query", format = "yyyyMMdd", example = "20200310" , required = true),
             		@ApiImplicitParam(name = "page", value = "页数，从1开始", dataType = "Integer", paramType = "query", example = "1", required = true)
             }

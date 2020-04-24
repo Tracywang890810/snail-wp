@@ -27,7 +27,7 @@ public class SnailWishLotteryRecordDomain implements Serializable{
 	@ApiModelProperty(value = "用户id", name = "unique", dataType = "String")
 	private String user;
 
-	@ApiModelProperty(value = "获奖类型", name = "type", dataType = "String", allowableValues = "GOODS, COUPON_BIG, COUPON_SMALL")
+	@ApiModelProperty(value = "获奖类型", name = "type", dataType = "String", allowableValues = "GOODS, COUPON")
 	@JsonSerialize(using = ToStringSerializer.class)
 	private AwardType type;
 

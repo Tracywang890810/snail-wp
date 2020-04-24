@@ -1,12 +1,11 @@
 package com.seblong.wp.domains;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.seblong.wp.entities.WishRecord;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
-import javax.persistence.*;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.seblong.wp.entities.WishRecord;
 
 @ApiModel("WishRecord-用户许愿记录")
 @Data
@@ -55,7 +54,7 @@ public class WishRecordDomain {
     /**
      * 奖品类型
      */
-    @ApiModelProperty(value = "awardType", name = "awardType", dataType = "String", example = "用户中奖状态,GOODS:实体奖品, COUPON_BIG:大额优惠券, COUPON_SMALL:小额优惠券")
+    @ApiModelProperty(value = "awardType", name = "awardType", dataType = "String", example = "用户中奖状态,GOODS:实体奖品, COUPON:优惠卷")
     private String awardType;
 
     public WishRecordDomain() {
