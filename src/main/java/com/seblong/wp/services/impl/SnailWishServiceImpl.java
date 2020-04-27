@@ -343,10 +343,13 @@ public class SnailWishServiceImpl implements SnailWishService {
 		if (snailWish != null) {
 			LocalDate nowLocalDate = LocalDate.now();
 			LocalDate nextLocalDate = nowLocalDate.plusDays(1);
+			LocalDate endLocalDate = LocalDate.parse(snailWish.getEndDate(), DateTimeFormatter.BASIC_ISO_DATE)
+					.plusDays(1);
 			String nextDate = nextLocalDate.format(DateTimeFormatter.BASIC_ISO_DATE);
 			String nowDate = nowLocalDate.format(DateTimeFormatter.BASIC_ISO_DATE);
-			if( nextDate.equals(snailWish.getLotteryDate()) ) {
-				if( wishRecordRepo.countByLotteryDate(nowDate) > 0  ) {
+			String endDate = endLocalDate.format(DateTimeFormatter.BASIC_ISO_DATE);
+			if (nextDate.equals(snailWish.getLotteryDate()) || endDate.equals(snailWish.getLotteryDate()) ) {
+				if (wishRecordRepo.countByLotteryDate(nowDate) > 0) {
 					String tag = "WISH_USERS_" + nowDate;
 					log.info("开始发送开奖推送: " + nowDate);
 					pushService.send("今日许愿池已开奖！快来看看你的获奖信息吧～", snailWish.getH5Url(), "", 0, tag, "WISHING");
@@ -397,8 +400,8 @@ public class SnailWishServiceImpl implements SnailWishService {
 			LocalDate nextLocalDate = nowLocalDate.plusDays(1);
 			String nextDate = nextLocalDate.format(DateTimeFormatter.BASIC_ISO_DATE);
 			String nowDate = nowLocalDate.format(DateTimeFormatter.BASIC_ISO_DATE);
-			if( nextDate.equals(snailWish.getLotteryDate()) ) {
-				if( wishRecordRepo.countByLotteryDate(nowDate) > 0  ) {
+			if (nextDate.equals(snailWish.getLotteryDate())) {
+				if (wishRecordRepo.countByLotteryDate(nowDate) > 0) {
 					String tag = "WISH_USERS_" + nowDate;
 					log.info("开始清理推送标签: " + nowDate);
 					pushService.deleteTag(tag);
@@ -477,7 +480,7 @@ public class SnailWishServiceImpl implements SnailWishService {
 			e.printStackTrace();
 		}
 	}
-	
+
 	private void createPushTagJobClearAtDate(String date) {
 
 		LocalDate localDate = LocalDate.parse(date, DateTimeFormatter.BASIC_ISO_DATE);
@@ -490,7 +493,8 @@ public class SnailWishServiceImpl implements SnailWishService {
 				scheduler.deleteJob(jobKey);
 			}
 			Trigger trigger = SnailTriggerUtils.getTriggerAtDate(PushTagClearJob.TRIGGER, "", timestamp);
-			scheduler.scheduleJob(JobBuilder.newJob(PushTagClearJob.class).withIdentity(PushTagClearJob.JOB).build(), trigger);
+			scheduler.scheduleJob(JobBuilder.newJob(PushTagClearJob.class).withIdentity(PushTagClearJob.JOB).build(),
+					trigger);
 			log.info("创建推送标签清理任务成功: " + date + "130000");
 		} catch (SchedulerException e) {
 			e.printStackTrace();
