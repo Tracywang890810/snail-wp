@@ -9,4 +9,6 @@ public interface PushService {
 	void addToTag( String tag, Set<String> userIds );
 	
 	void send(String content, String url, String imageUrl, long sendDate, String group, String messageType);
+	
+	void list();
 }

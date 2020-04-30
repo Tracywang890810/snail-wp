@@ -17,19 +17,19 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.seblong.wp.domains.SnailWishDomain;
 import com.seblong.wp.entities.SnailWish;
 import com.seblong.wp.exceptions.ValidationException;
 import com.seblong.wp.resource.StandardEntityResource;
 import com.seblong.wp.resource.StandardRestResource;
+import com.seblong.wp.services.PushService;
 import com.seblong.wp.services.SnailWishService;
-import com.seblong.wp.utils.RegexUtils;
 
 @Api(tags = "许愿池的管理后台接口")
 @Controller
@@ -38,6 +38,9 @@ public class APISnailWishManageController {
 
 	@Autowired
 	private SnailWishService snailWishService;
+	
+	@Autowired
+	private PushService pushService;
 
 	@ApiOperation(value = "获取许愿池")
 	@ApiResponses(value = { @ApiResponse(code = 1404, message = "snailwish-not-exist"),
@@ -156,25 +159,33 @@ public class APISnailWishManageController {
 			throw new ValidationException(1405, "invalid-endTime");
 		}
 
-		if (!StringUtils.isEmpty(couponUrl) && !RegexUtils.checkURL(couponUrl)) {
-			throw new ValidationException(1410, "invalid-couponUrl");
-		}
+//		if (!StringUtils.isEmpty(couponUrl) && !RegexUtils.checkURL(couponUrl)) {
+//			throw new ValidationException(1410, "invalid-couponUrl");
+//		}
 		
-		if (StringUtils.isEmpty(couponUrl) || !RegexUtils.checkURL(couponUrl)) {
-			throw new ValidationException(1409, "invalid-h5Url");
-		}
+//		if (StringUtils.isEmpty(h5Url) || !RegexUtils.checkURL(h5Url)) {
+//			throw new ValidationException(1409, "invalid-h5Url");
+//		}
 		
 		
 	}
 	
 	private void validate(String couponUrl, String h5Url) {
-		if (!StringUtils.isEmpty(couponUrl) && !RegexUtils.checkURL(couponUrl)) {
-			throw new ValidationException(1410, "invalid-couponUrl");
-		}
+//		if (!StringUtils.isEmpty(couponUrl) && !RegexUtils.checkURL(couponUrl)) {
+//			throw new ValidationException(1410, "invalid-couponUrl");
+//		}
 		
-		if (StringUtils.isEmpty(couponUrl) || !RegexUtils.checkURL(couponUrl)) {
-			throw new ValidationException(1409, "invalid-h5Url");
-		}
+//		if (StringUtils.isEmpty(h5Url) || !RegexUtils.checkURL(h5Url)) {
+//			throw new ValidationException(1409, "invalid-h5Url");
+//		}
+	}
+	
+	
+	@GetMapping(value = "/test")
+	@ResponseBody
+	public String test(){
+		pushService.list();
+		return "OK";
 	}
 
 }
