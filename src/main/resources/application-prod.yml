@@ -1,9 +1,9 @@
 server:
   servlet:
-    context-path: /snail-wp-v2
+    context-path: /snail-wp-v3
 spring:
   datasource:
-    url: jdbc:mysql://10.66.160.153:3306/wishv2?characterEncoding=UTF-8&rewriteBatchedStatements=true&autoReconnect=true&autoReconnectForPools=true&createDatabaseIfNotExists=true&useSSL=false&serverTimezone=GMT%2B8
+    url: jdbc:mysql://10.66.160.153:3306/wishv3?characterEncoding=UTF-8&rewriteBatchedStatements=true&autoReconnect=true&autoReconnectForPools=true&createDatabaseIfNotExists=true&useSSL=false&serverTimezone=GMT%2B8
     username: root
     password: seblong@2017
     type: com.zaxxer.hikari.HikariDataSource
@@ -62,7 +62,7 @@ snail:
       ak: f5eba399005f4c8d95894eca
       sk: 5f5ce90d7af0ef3d06b5265b
     push:
-      url: http://api.snailsleep.net/snail/v1/snailmessage/send
+      url: http://snailsleep.net/snail/v1/snailmessage/send
 sign:
   key: 80C2CD8227CBBE096697A14A16783C99
   check:

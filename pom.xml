@@ -119,7 +119,7 @@
 	</dependencies>
 
 	<build>
-		<finalName>snail-wp-v2</finalName>
+		<finalName>snail-wp-v3</finalName>
 		<plugins>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>

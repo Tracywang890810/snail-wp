@@ -70,14 +70,14 @@ public class APIWishRecordController {
             rMap.put("message", "user-was-joined");
             return rMap;
         }
-//        WishRecord recordDevice = wishRecordService.findByDeviceIdAndDate(deviceId, snailWish.getLotteryDate());
-//        if(recordDevice != null){
-//            rMap.put("status", 1406);
-//            rMap.put("message", "device-was-joined");
-//            return rMap;
-//        }
+        WishRecord recordDevice = wishRecordService.findByDeviceIdAndDate(deviceId, snailWish.getLotteryDate());
+        if(recordDevice != null){
+            rMap.put("status", 1406);
+            rMap.put("message", "device-was-joined");
+            return rMap;
+        }
         boolean isAllowBig = snailWishService.isAllowBig(snailWish, userId);
-        WishRecord wishRecord = wishRecordService.wishing(userId, deviceId, snailWish.getLotteryDate(), isAllowBig);
+        wishRecordService.wishing(userId, deviceId, snailWish.getLotteryDate(), isAllowBig);
         rMap.put("status", 200);
         rMap.put("message", "OK");
         return rMap;

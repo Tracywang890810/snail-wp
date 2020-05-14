@@ -71,7 +71,7 @@ public class SnailWishServiceImpl implements SnailWishService {
 	@Autowired
 	private RestTemplate restTemplate;
 
-	private final static String key = "SNAIL::WISH::V2";
+	private final static String key = "SNAIL::WISH::V3";
 
 	@Override
 	public SnailWish create(String startDate, String endDate, String startTime, String endTime, String couponUrl,
@@ -199,7 +199,7 @@ public class SnailWishServiceImpl implements SnailWishService {
 	@Override
 	public void lottery() {
 		log.info("开始开奖方法。。。  ");
-		String lockKey = "WISH::LOTTERY:LOCK::V2";
+		String lockKey = "WISH::LOTTERY:LOCK::V3";
 		RedisLock redisLock = new RedisLock(redisTemplate, lockKey);
 		if (redisLock.tryLock()) {
 			log.info("获取到锁，进入开奖逻辑。。。 ");
@@ -210,7 +210,7 @@ public class SnailWishServiceImpl implements SnailWishService {
 					LocalDate nowLocalDate = LocalDate.now();
 					String nowLocalDateStr = nowLocalDate.format(DateTimeFormatter.BASIC_ISO_DATE);
 					if (nowLocalDateStr.equals(snailWish.getLotteryDate())) {
-						// 70
+						// 20
 						// 取出不允许奖品的记录
 						int page = 0, size = 128;
 						Sort sort = Sort.by("id");
@@ -236,7 +236,7 @@ public class SnailWishServiceImpl implements SnailWishService {
 							}
 						}
 						// 取出允许奖品的记录
-						int prize = 70, prizeRemain = 70;
+						int prize = 20, prizeRemain = 20;
 						long allowBigTotal = wishRecordRepo.countByLotteryDateAndAllowBig(nowLocalDateStr, true);
 						if (allowBigTotal > 0) {
 							double total = (double) allowBigTotal;
@@ -348,7 +348,7 @@ public class SnailWishServiceImpl implements SnailWishService {
 			String nextDate = nextLocalDate.format(DateTimeFormatter.BASIC_ISO_DATE);
 			String nowDate = nowLocalDate.format(DateTimeFormatter.BASIC_ISO_DATE);
 			String endDate = endLocalDate.format(DateTimeFormatter.BASIC_ISO_DATE);
-			if (nextDate.equals(snailWish.getLotteryDate()) || endDate.equals(snailWish.getLotteryDate()) ) {
+			if (nextDate.equals(snailWish.getLotteryDate()) || endDate.equals(snailWish.getLotteryDate())) {
 				if (wishRecordRepo.countByLotteryDate(nowDate) > 0) {
 					String tag = "WISH_USERS_" + nowDate;
 					log.info("开始发送开奖推送: " + nowDate);
@@ -428,18 +428,18 @@ public class SnailWishServiceImpl implements SnailWishService {
 
 	private void putBigUser(SnailWish snailWish, List<String> users) {
 		if (!CollectionUtils.isEmpty(users)) {
-			String key = "SNAIL::WISH::BIG::V2::" + snailWish.getId();
+			String key = "SNAIL::WISH::BIG::V3::" + snailWish.getId();
 			redisTemplate.boundSetOps(key).add(users.toArray());
 		}
 	}
 
 	private boolean isBigUser(SnailWish snailWish, String user) {
-		String key = "SNAIL::WISH::BIG::V2::" + snailWish.getId();
+		String key = "SNAIL::WISH::BIG::V3::" + snailWish.getId();
 		return redisTemplate.boundSetOps(key).isMember(user);
 	}
 
 	private void clearBigUser(SnailWish snailWish) {
-		String key = "SNAIL::WISH::BIG::V2::" + snailWish.getId();
+		String key = "SNAIL::WISH::BIG::V3::" + snailWish.getId();
 		redisTemplate.delete(key);
 	}
 
