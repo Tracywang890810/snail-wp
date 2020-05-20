@@ -81,9 +81,6 @@ public class SnailWish implements Serializable{
 	private boolean yesterdayJoined;
 
 	@Transient
-	private boolean popup;
-
-	@Transient
 	private long current;
 
 	public SnailWish() {

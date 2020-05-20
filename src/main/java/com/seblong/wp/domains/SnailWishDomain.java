@@ -52,9 +52,6 @@ public class SnailWishDomain implements Serializable {
 	@ApiModelProperty(value = "昨天是否已经参加", name = "yesterdayJoined", dataType = "Boolean")
 	private boolean yesterdayJoined;
 
-	@ApiModelProperty(value = "是否需要弹窗", name = "popup", dataType = "Boolean")
-	private boolean popup;
-
 	@ApiModelProperty(value = "当前的时间戳", name = "current", dataType = "Long")
 	private long current;
 
@@ -80,7 +77,6 @@ public class SnailWishDomain implements Serializable {
 		domain.yesterdayJoined = snailWish.isYesterdayJoined();
 		domain.countDown = snailWish.getCountDown();
 		domain.status = snailWish.getStatus();
-		domain.popup = snailWish.isPopup();
 		domain.lotteryDate = snailWish.getLotteryDate();
 		domain.num = snailWish.getNum();
 		return domain;

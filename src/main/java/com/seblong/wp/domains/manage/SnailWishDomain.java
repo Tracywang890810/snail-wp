@@ -6,6 +6,7 @@ import io.swagger.annotations.ApiModelProperty;
 import java.io.Serializable;
 
 import com.seblong.wp.entities.SnailWish;
+import com.seblong.wp.entities.SnailWish.WishStatus;
 
 import lombok.Data;
 
@@ -38,9 +39,20 @@ public class SnailWishDomain implements Serializable{
 	private String endTime;
 
 	@ApiModelProperty(value = "优惠卷url", name = "couponUrl", dataType = "String", allowEmptyValue = true)
-	// 中额优惠卷地址
+	// 优惠卷地址
 	private String couponUrl;
+	
+	@ApiModelProperty(value = "h5客户端地址，推送要用到", name = "h5Url", dataType = "String", allowEmptyValue = true)
+	private String h5Url;
 
+	@ApiModelProperty(value = "状态, 依次代表还未开始许愿、已经开始、等待开奖、许愿活动结束", name = "status", dataType = "String", allowableValues = "NOT_START, START, WAIT_LOTTERY, END")
+	private WishStatus status;
+
+	@ApiModelProperty(value = "开奖", name = "lotteryDate", dataType = "String", example = "20200321")
+	private String lotteryDate;
+
+	@ApiModelProperty(value = "第几次开奖", name = "num", dataType = "Integer")
+	private int num;
 	
 	private SnailWishDomain () {
 	}
@@ -53,6 +65,9 @@ public class SnailWishDomain implements Serializable{
 		domain.startTime = snailWish.getStartTime();
 		domain.endTime = snailWish.getEndTime();
 		domain.couponUrl = snailWish.getCouponUrl();
+		domain.status = snailWish.getStatus();
+		domain.lotteryDate = snailWish.getLotteryDate();
+		domain.num = snailWish.getNum();
 		return domain;
 	}
 	
