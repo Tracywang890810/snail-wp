@@ -68,6 +68,7 @@ public class SnailWishDomain implements Serializable{
 		domain.status = snailWish.getStatus();
 		domain.lotteryDate = snailWish.getLotteryDate();
 		domain.num = snailWish.getNum();
+		domain.h5Url = snailWish.getH5Url();
 		return domain;
 	}
 	
