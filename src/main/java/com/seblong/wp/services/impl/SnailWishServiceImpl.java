@@ -152,10 +152,16 @@ public class SnailWishServiceImpl implements SnailWishService {
 				snailWish.joined();
 			}
 			LocalDate lotteryLocalDate = LocalDate.parse(snailWish.getLotteryDate(), DateTimeFormatter.BASIC_ISO_DATE);
-			String yesterdayLottery = lotteryLocalDate.minusDays(1).format(DateTimeFormatter.BASIC_ISO_DATE);
-			if (!yesterdayLottery.equals(snailWish.getStartDate())) {
-				snailWish.setYesterdayJoined(wishRecordRepo.countByUserAndLotteryDate(user, yesterdayLottery) > 0);
+			LocalDate nowLocalDate = LocalDate.now();
+			if (lotteryLocalDate.equals(nowLocalDate)) {
+				snailWish.setYesterdayJoined(wishRecordRepo.countByUserAndLotteryDate(user, snailWish.getLotteryDate()) > 0);
+			} else {
+				String yesterdayLottery = lotteryLocalDate.minusDays(1).format(DateTimeFormatter.BASIC_ISO_DATE);
+				if (!yesterdayLottery.equals(snailWish.getStartDate())) {
+					snailWish.setYesterdayJoined(wishRecordRepo.countByUserAndLotteryDate(user, yesterdayLottery) > 0);
+				}
 			}
+			
 		}
 		return snailWish;
 	}

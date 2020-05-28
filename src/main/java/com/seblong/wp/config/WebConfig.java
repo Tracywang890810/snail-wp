@@ -26,7 +26,7 @@ public class WebConfig {
 
 			@Override
 			public void addInterceptors(InterceptorRegistry registry) {
-//				registry.addInterceptor(signInterceptor()).excludePathPatterns("/manage/**");
+				registry.addInterceptor(signInterceptor()).excludePathPatterns("/manage/**");
 			}
 		};
 	}
